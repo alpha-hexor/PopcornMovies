@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Popcorn Movies</string>
+    <string name="search">Search</string>
+    <string name="searching">Searching</string>
+    <string name="search_results">Search Results</string>
+    <string name="trending">Trending</string>
+    <string name="search_button_content_description">Click this button to search for text entered</string>
+    <string name="no_search_results">No matching results found</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="wish_list">Wish List</string>
+    <string name="add_to_wishlist_button_description">Click this button to add this show to wishlist</string>
+    <string name="watch">Watch</string>
+    <string name="season">Season %d</string>
+    <string name="episode">Episode %d</string>
+    <string name="internet_down">You are not connected to the internet. Kindly connect.</string>
+    <string name="no_data_available">No data available</string>
+    <string name="or">or</string>
+    <string name="track_selection_title">Video Quality</string>
+    <string name="movie_link_not_found">Movie link not found</string>
+</resources>

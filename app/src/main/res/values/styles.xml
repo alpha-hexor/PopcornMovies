@@ -1,0 +1,35 @@
+<resources>
+
+    <style name="Buttons" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/bg_button</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:foreground">?android:attr/selectableItemBackground</item>
+    </style>
+    <style name="InvertedButtons" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/bg_button_inverted</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:foreground">?android:attr/selectableItemBackground</item>
+    </style>
+    <style name="TextViews" parent="Widget.AppCompat.TextView">
+        <item name="android:textColor">@color/colorAccent</item>
+    </style>
+    <style name="InvertedTextViews" parent="Widget.AppCompat.TextView">
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
+    <style name="HighlightedTextViews" parent="Widget.AppCompat.TextView">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:shadowColor">@color/colorAccent</item>"
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">2</item>
+    </style>
+    <style name="InvertedHighlightedTextViews" parent="Widget.AppCompat.TextView">
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:shadowColor">@color/colorPrimary</item>"
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">2</item>
+    </style>
+</resources>

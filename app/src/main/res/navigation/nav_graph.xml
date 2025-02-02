@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/home">
+
+    <fragment
+        android:id="@+id/home"
+        android:name="local.to.popcornmovies.fragments.home.Home"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_home_to_details"
+            app:destination="@id/details" />
+    </fragment>
+    <fragment
+        android:id="@+id/details"
+        android:name="local.to.popcornmovies.fragments.details.Details"
+        android:label="fragment_details"
+        tools:layout="@layout/fragment_details" >
+        <argument
+            android:name="show"
+            app:argType="local.to.popcornmovies.models.TrendingSearchWishResultModel" />
+        <action
+            android:id="@+id/action_details_to_player"
+            app:destination="@id/player" />
+    </fragment>
+    <fragment
+        android:id="@+id/player"
+        android:name="local.to.popcornmovies.fragments.player.Player"
+        android:label="fragment_player"
+        tools:layout="@layout/fragment_player" >
+        <argument
+            android:name="isSeries"
+            app:argType="boolean" />
+        <argument
+            android:name="seasonNumber"
+            app:argType="integer" />
+        <argument
+            android:name="episodeNumber"
+            app:argType="integer" />
+        <argument
+            android:name="tmdbId"
+            app:argType="string" />
+        <argument
+            android:name="watchPercentage"
+            app:argType="float" />
+    </fragment>
+
+</navigation>
