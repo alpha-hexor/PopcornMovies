@@ -1,7 +1,7 @@
 name: "Building android apk"
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build:
