@@ -88,6 +88,15 @@
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:itemCount="10"
                     tools:listitem="@layout/search_result_card" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/anime_search_result_list_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:itemCount="10"
+                    tools:listitem="@layout/anime_search_result_card" />
             </LinearLayout>
 
             <LinearLayout
@@ -151,9 +160,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="gone"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:itemCount="10"
                     tools:listitem="@layout/wish_result_card" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/anime_wish_list_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="gone"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:itemCount="10"
+                    tools:listitem="@layout/anime_wish_result_card" />
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

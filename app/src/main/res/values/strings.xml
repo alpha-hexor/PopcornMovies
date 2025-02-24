@@ -12,9 +12,14 @@
     <string name="watch">Watch</string>
     <string name="season">Season %d</string>
     <string name="episode">Episode %d</string>
+    <string name="episode_str">Episode %s</string>
     <string name="internet_down">You are not connected to the internet. Kindly connect.</string>
     <string name="no_data_available">No data available</string>
     <string name="or">or</string>
     <string name="track_selection_title">Video Quality</string>
     <string name="movie_link_not_found">Movie link not found</string>
+    <string name="link_not_found">Link not found.</string>
+    <string name="sub">Sub</string>
+    <string name="dub">Dub</string>
+    <string name="select_type">Select Type</string>
 </resources>

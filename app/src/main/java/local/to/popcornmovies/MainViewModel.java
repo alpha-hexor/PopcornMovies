@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import local.to.popcornmovies.models.AnimeEpisode;
+import local.to.popcornmovies.models.AnimeStreamingSource;
+import local.to.popcornmovies.models.AnimeWishSearchResultModel;
 import local.to.popcornmovies.models.Episode;
 import local.to.popcornmovies.models.QualityParsedModel;
 import local.to.popcornmovies.models.Season;
@@ -19,15 +22,18 @@ import local.to.popcornmovies.models.SeasonEpisode;
 import local.to.popcornmovies.models.StreamingModel;
 import local.to.popcornmovies.models.TrendingSearchWishResultModel;
 import local.to.popcornmovies.rooom_database.MainDatabase;
+import local.to.popcornmovies.rooom_database.entities.AnimeEpisodeEntity;
+import local.to.popcornmovies.rooom_database.entities.AnimeWishEntity;
 import local.to.popcornmovies.rooom_database.entities.EpisodeEntity;
 import local.to.popcornmovies.rooom_database.entities.MovieEntity;
 import local.to.popcornmovies.rooom_database.entities.SeasonEntity;
 import local.to.popcornmovies.rooom_database.entities.SeriesEntity;
 import local.to.popcornmovies.rooom_database.entities.TrendingEntity;
 import local.to.popcornmovies.rooom_database.entities.WishEntity;
-import local.to.popcornmovies.utils.LinkUtils;
+import local.to.popcornmovies.utils.AllAnimeLinkUtils;
 import local.to.popcornmovies.utils.M3U8_QualityParser;
 import local.to.popcornmovies.utils.OkHttpUtil;
+import local.to.popcornmovies.utils.PopcornMoviesLinkUtils;
 import local.to.popcornmovies.utils.SubtitleConfigurationUtils;
 
 public class MainViewModel extends ViewModel {
@@ -37,39 +43,47 @@ public class MainViewModel extends ViewModel {
     public final ExecutorService
             executor = Executors.newFixedThreadPool(4);
 
-
     public MutableLiveData<Boolean> networkState
             = new MutableLiveData<Boolean>(false);
 
-    public MutableLiveData<LinkUtils> linkUtils
-            = new MutableLiveData<LinkUtils>(null);
+    public MutableLiveData<PopcornMoviesLinkUtils> popcornMoviesLinkUtil
+            = new MutableLiveData<PopcornMoviesLinkUtils>();
+
+    public MutableLiveData<AllAnimeLinkUtils> allAnimeLinkUtil
+            = new MutableLiveData<AllAnimeLinkUtils>();
 
     public MutableLiveData<MainDatabase> mainDatabase
-            = new MutableLiveData<MainDatabase>(null);
+            = new MutableLiveData<MainDatabase>();
 
     public MutableLiveData<ArrayList<TrendingSearchWishResultModel>>
-            searchResults = new MutableLiveData<ArrayList<TrendingSearchWishResultModel>>(null),
-            trendingResults = new MutableLiveData<ArrayList<TrendingSearchWishResultModel>>(null),
-            wish = new MutableLiveData<ArrayList<TrendingSearchWishResultModel>>(null);
+            searchResults = new MutableLiveData<ArrayList<TrendingSearchWishResultModel>>(),
+            trendingResults = new MutableLiveData<ArrayList<TrendingSearchWishResultModel>>(),
+            wish = new MutableLiveData<ArrayList<TrendingSearchWishResultModel>>();
+
+    public MutableLiveData<ArrayList<AnimeWishSearchResultModel>>
+            animeSearchResults = new MutableLiveData<ArrayList<AnimeWishSearchResultModel>>(),
+            animeWish = new MutableLiveData<ArrayList<AnimeWishSearchResultModel>>();
 
     public MutableLiveData<MovieEntity> movieData
-            = new MutableLiveData<MovieEntity>(null);
+            = new MutableLiveData<MovieEntity>();
 
     public MutableLiveData<ArrayList<Season>> seasonData
-            = new MutableLiveData<ArrayList<Season>>(null);
-
-
-    public MutableLiveData<StreamingModel> streamingData
-            = new MutableLiveData<StreamingModel>(null);
+            = new MutableLiveData<ArrayList<Season>>();
 
     public MutableLiveData<ArrayList<QualityParsedModel>> qualityParsedModelMutableLiveData
-            = new MutableLiveData<ArrayList<QualityParsedModel>>(null);
+            = new MutableLiveData<ArrayList<QualityParsedModel>>();
+
+    public MutableLiveData<ArrayList<AnimeEpisode>> animeEpisode
+            = new MutableLiveData<ArrayList<AnimeEpisode>>();
+
+    public MutableLiveData<ArrayList<AnimeStreamingSource>> animeStreamingLinks
+            = new MutableLiveData<ArrayList<AnimeStreamingSource>>();
 
     public void search(String query) {
-        if (this.linkUtils.getValue() == null || query.length() <= 0) return;
+        if (this.popcornMoviesLinkUtil.getValue() == null || query.length() <= 0) return;
         executor.execute(() -> {
             try {
-                ArrayList<TrendingSearchWishResultModel> searchResults = this.linkUtils.getValue().searchMedia(query);
+                ArrayList<TrendingSearchWishResultModel> searchResults = this.popcornMoviesLinkUtil.getValue().searchMedia(query);
                 for (TrendingSearchWishResultModel searchResult : searchResults) {
                     searchResult.inWishList = Boolean.valueOf(this.mainDatabase.getValue().getWishList().doHave(searchResult.mediaLink));
                 }
@@ -79,13 +93,25 @@ public class MainViewModel extends ViewModel {
                 this.searchResults.postValue(null);
             }
         });
+        executor.execute(() -> {
+            try {
+                ArrayList<AnimeWishSearchResultModel> searchResults = this.allAnimeLinkUtil.getValue().animeSearch(query);
+                for (AnimeWishSearchResultModel searchResult : searchResults) {
+                    searchResult.inWishList = Boolean.valueOf(this.mainDatabase.getValue().getAnimeWishListDAO().doHave(searchResult.id));
+                }
+                this.animeSearchResults.postValue(searchResults);
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting anime search result", e);
+                this.animeSearchResults.postValue(null);
+            }
+        });
     }
 
     public void getTrending() {
-        if (this.linkUtils.getValue() == null) return;
+        if (this.popcornMoviesLinkUtil.getValue() == null) return;
         this.executor.execute(() -> {
             try {
-                ArrayList<TrendingSearchWishResultModel> trendingResults = this.linkUtils.getValue().getTrending();
+                ArrayList<TrendingSearchWishResultModel> trendingResults = this.popcornMoviesLinkUtil.getValue().getTrending();
                 for (TrendingSearchWishResultModel trendingResult : trendingResults) {
                     trendingResult.inWishList = Boolean.valueOf(this.mainDatabase.getValue().getWishList().doHave(trendingResult.mediaLink));
                 }
@@ -116,10 +142,6 @@ public class MainViewModel extends ViewModel {
         });
     }
 
-    private void getAndStoreTrendingOnline(){
-
-    }
-
     public void getAllWish() {
         if (this.mainDatabase.getValue() == null) return;
         this.executor.execute(() -> {
@@ -131,6 +153,16 @@ public class MainViewModel extends ViewModel {
                 wishData.add(trendingSearchWishResultModel);
             }
             this.wish.postValue(wishData);
+        });
+        this.executor.execute(() -> {
+            List<AnimeWishEntity> tempWish = this.mainDatabase.getValue().getAnimeWishListDAO().getAll();
+            ArrayList<AnimeWishSearchResultModel> wishData = new ArrayList<AnimeWishSearchResultModel>(tempWish.size());
+            for (int i = 0; i < tempWish.size(); i++) {
+                AnimeWishEntity wishEntity = tempWish.get(i);
+                AnimeWishSearchResultModel trendingSearchWishResultModel = new AnimeWishSearchResultModel(wishEntity.id, wishEntity.poster, wishEntity.title);
+                wishData.add(trendingSearchWishResultModel);
+            }
+            this.animeWish.postValue(wishData);
         });
     }
 
@@ -176,6 +208,34 @@ public class MainViewModel extends ViewModel {
         });
     }
 
+    public void addToWish(AnimeWishSearchResultModel data) {
+        if (this.mainDatabase.getValue() == null) return;
+        this.executor.execute(() -> {
+            long status = this.mainDatabase.getValue().getAnimeWishListDAO().add(new AnimeWishEntity(data.id, data.poster, data.title));
+            ArrayList<AnimeWishSearchResultModel> tempSearch = this.animeSearchResults.getValue();
+            boolean isAtleast1UpdatedOnSearch = false;
+            if (tempSearch != null) {
+                if (!tempSearch.isEmpty()) {
+                    for (int i = 0; i < tempSearch.size(); i++) {
+                        AnimeWishSearchResultModel tempSearchData = tempSearch.get(i);
+                        if (tempSearchData.id.equals(data.id)) {
+                            tempSearchData.inWishList = true;
+                            isAtleast1UpdatedOnSearch = true;
+                        }
+                    }
+                }
+            }
+            List<AnimeWishEntity> allWish = this.mainDatabase.getValue().getAnimeWishListDAO().getAll();
+            ArrayList<AnimeWishSearchResultModel> tempAllWish = new ArrayList<AnimeWishSearchResultModel>(allWish.size());
+            for (int i = 0; i < allWish.size(); i++) {
+                AnimeWishSearchResultModel trendingSearchWishResultModel = new AnimeWishSearchResultModel(allWish.get(i).id, allWish.get(i).poster, allWish.get(i).title);
+                tempAllWish.add(trendingSearchWishResultModel);
+            }
+            if (isAtleast1UpdatedOnSearch) this.animeSearchResults.postValue(tempSearch);
+            this.animeWish.postValue(tempAllWish);
+        });
+    }
+
     public void removeFromWish(TrendingSearchWishResultModel data) {
         if (this.mainDatabase.getValue() == null) return;
         this.executor.execute(() -> {
@@ -218,15 +278,43 @@ public class MainViewModel extends ViewModel {
         });
     }
 
+    public void removeFromWish(AnimeWishSearchResultModel data) {
+        if (this.mainDatabase.getValue() == null) return;
+        this.executor.execute(() -> {
+            long status = this.mainDatabase.getValue().getAnimeWishListDAO().delete(new AnimeWishEntity(data.id, data.poster, data.title));
+            ArrayList<AnimeWishSearchResultModel> tempSearch = this.animeSearchResults.getValue();
+            boolean isAtleast1UpdatedSearch = false;
+            if (tempSearch != null) {
+                if (!tempSearch.isEmpty()) {
+                    for (int i = 0; i < tempSearch.size(); i++) {
+                        AnimeWishSearchResultModel tempSearchData = tempSearch.get(i);
+                        if (tempSearchData.id.equals(data.id)) {
+                            tempSearchData.inWishList = false;
+                            isAtleast1UpdatedSearch = true;
+                        }
+                    }
+                }
+            }
+            List<AnimeWishEntity> allWish = this.mainDatabase.getValue().getAnimeWishListDAO().getAll();
+            ArrayList<AnimeWishSearchResultModel> tempAllWish = new ArrayList<AnimeWishSearchResultModel>(allWish.size());
+            for (int i = 0; i < allWish.size(); i++) {
+                AnimeWishSearchResultModel trendingSearchWishResultModel = new AnimeWishSearchResultModel(allWish.get(i).id, allWish.get(i).poster, allWish.get(i).title);
+                tempAllWish.add(trendingSearchWishResultModel);
+            }
+            if (isAtleast1UpdatedSearch) this.animeSearchResults.postValue(tempSearch);
+            this.animeWish.postValue(tempAllWish);
+        });
+    }
+
     public void getMovieOrSeasonData(String mediaLink) {
         this.executor.execute(() -> {
-            if (this.linkUtils.getValue().isMovie(mediaLink)) {
+            if (this.popcornMoviesLinkUtil.getValue().isMovie(mediaLink)) {
                 MovieEntity movieEntity = this.mainDatabase.getValue().getMovieDAO().getMovie(mediaLink);
                 if (movieEntity != null) {
                     this.movieData.postValue(movieEntity);
                 } else {
                     try {
-                        String tmdbId = this.linkUtils.getValue().getTmdbId(mediaLink);
+                        String tmdbId = this.popcornMoviesLinkUtil.getValue().getTmdbId(mediaLink);
                         movieEntity = new MovieEntity(mediaLink, tmdbId, 0f);
                         this.mainDatabase.getValue().getMovieDAO().add(movieEntity);
                         this.movieData.postValue(movieEntity);
@@ -239,13 +327,13 @@ public class MainViewModel extends ViewModel {
                 String tmdbId = getTmdbIdOffline(mediaLink);
                 if(tmdbId==null && this.networkState.getValue()) {
                     try {
-                        tmdbId = this.linkUtils.getValue().getTmdbId(mediaLink);
+                        tmdbId = this.popcornMoviesLinkUtil.getValue().getTmdbId(mediaLink);
                         this.mainDatabase.getValue().getSeriesDAO().insert(new SeriesEntity(mediaLink, tmdbId));
                     } catch (Exception e) {
                         this.seasonData.postValue(new ArrayList<Season>(0));
                         return;
                     }
-                } else if(tmdbId!=null && !this.networkState.getValue()){
+                } else if(tmdbId==null && !this.networkState.getValue()){
                     this.seasonData.postValue(new ArrayList<Season>(0));
                     return;
                 }
@@ -286,7 +374,7 @@ public class MainViewModel extends ViewModel {
     }
 
     private ArrayList<Season> getAndStoreSeasonDataOnline(String tmdbId) throws Exception {
-        int[] seasonEpisodeData = this.linkUtils.getValue().getSeriesSeasonEpisodes(tmdbId);
+        int[] seasonEpisodeData = this.popcornMoviesLinkUtil.getValue().getSeriesSeasonEpisodes(tmdbId);
         if(this.mainDatabase.getValue().getSeasonDAO().get(tmdbId)==null)
             this.mainDatabase.getValue().getSeasonDAO().insert(new SeasonEntity(tmdbId,seasonEpisodeData.length));
         else
@@ -314,14 +402,14 @@ public class MainViewModel extends ViewModel {
             StreamingModel streamingModel = null;
             try {
                 if(isSeries)
-                    streamingModel = this.linkUtils
+                    streamingModel = this.popcornMoviesLinkUtil
                             .getValue()
                             .getSeriesStreamingLink(seasonNumber, episodeNumber, tmdbId);
                 else
-                    streamingModel = this.linkUtils.getValue().getMovieStreamingLink(tmdbId);
+                    streamingModel = this.popcornMoviesLinkUtil.getValue().getMovieStreamingLink(tmdbId);
             } catch (Exception e) {
                 Log.e(TAG,"Error is getting streaming details",e);
-                this.qualityParsedModelMutableLiveData.postValue(new ArrayList<QualityParsedModel>(0));
+                this.qualityParsedModelMutableLiveData.postValue(null);
                 return;
             }
             if(streamingModel == null) {
@@ -348,5 +436,60 @@ public class MainViewModel extends ViewModel {
                 this.mainDatabase.getValue().getMovieDAO().update(tmdbId,watch_percentage);
         });
 
+    }
+
+    public void getAnimeEpisode(String id) {
+        if(this.allAnimeLinkUtil.getValue() == null) return;
+        this.executor.execute(()->{
+            try {
+                if(this.networkState.getValue()) this.getAnimeEpisodeOnline(id);
+                else this.getAnimeEpisodeOffline(id);
+            } catch (Exception e) {
+                Log.e(TAG,"Error in getting anime episode",e);
+                if(!this.networkState.getValue()) this.getAnimeEpisodeOffline(id);
+                else this.animeEpisode.postValue(new ArrayList<>(0));
+            }
+        });
+    }
+
+    private void getAnimeEpisodeOnline(String id) throws Exception {
+        ArrayList<AnimeEpisode> animeEpisodes = this.allAnimeLinkUtil.getValue().getAnimeEpisodes(id);
+        if(animeEpisodes == null) return;
+        for (AnimeEpisode episode : animeEpisodes) {
+            AnimeEpisodeEntity animeEpisodeEntity = this.mainDatabase.getValue().getAnimeEpisodeDAO().get(id,episode.episode);
+            if(animeEpisodeEntity==null)
+                this.mainDatabase.getValue().getAnimeEpisodeDAO().insert(new AnimeEpisodeEntity(id,episode.episode,episode.isDubAvailable));
+            else if(animeEpisodeEntity.isDubAvailable != episode.isDubAvailable)
+                this.mainDatabase.getValue().getAnimeEpisodeDAO().update(id,episode.episode,episode.isDubAvailable);
+        }
+        getAnimeEpisodeOffline(id);
+    }
+
+    private void getAnimeEpisodeOffline(String id) {
+        List<AnimeEpisodeEntity> animeEpisodeEntities = this.mainDatabase.getValue().getAnimeEpisodeDAO().get(id);
+        ArrayList<AnimeEpisode> animeEpisodes = new ArrayList<AnimeEpisode>(animeEpisodeEntities.size());
+        for (AnimeEpisodeEntity animeEpisodeEntity : animeEpisodeEntities)
+            animeEpisodes.add(new AnimeEpisode(animeEpisodeEntity.id,animeEpisodeEntity.episode,animeEpisodeEntity.isDubAvailable,animeEpisodeEntity.watchPercentage));
+        this.animeEpisode.postValue(animeEpisodes);
+    }
+
+    public void getAnimeStreamingLink(String id, String episode, String subDub) {
+        if(!this.networkState.getValue()) return;
+        this.executor.execute(()-> {
+            try {
+                ArrayList<AnimeStreamingSource> streamingModels = this.allAnimeLinkUtil.getValue().getAnimeVideoLink(id,episode,subDub);
+                this.animeStreamingLinks.postValue(streamingModels);
+            } catch (Exception e) {
+                Log.e(TAG,"Error in getting anime streaming link",e);
+                this.animeStreamingLinks.postValue(new ArrayList<>(0));
+            }
+        });
+    }
+
+    public void updateAnimeWatchPercentage(String id, String episode, float progress) {
+        if(this.allAnimeLinkUtil.getValue()==null) return;
+        this.executor.execute(()-> {
+            this.mainDatabase.getValue().getAnimeEpisodeDAO().update(id,episode,progress);
+        });
     }
 }

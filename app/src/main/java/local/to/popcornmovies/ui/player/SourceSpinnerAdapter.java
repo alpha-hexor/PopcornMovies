@@ -12,12 +12,12 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import local.to.popcornmovies.databinding.QualityListItemBinding;
-import local.to.popcornmovies.models.QualityParsedModel;
+import local.to.popcornmovies.models.AnimeStreamingSource;
 
-public class QualitySpinnerAdapter extends ArrayAdapter<QualityParsedModel> {
-    private final List<QualityParsedModel> qualityList;
+public class SourceSpinnerAdapter extends ArrayAdapter<AnimeStreamingSource> {
+    private final List<AnimeStreamingSource> qualityList;
 
-    public QualitySpinnerAdapter(@NonNull Context context, @NonNull List<QualityParsedModel> qualityList/*, @NonNull OnQualitySelectedListener listener*/) {
+    public SourceSpinnerAdapter(@NonNull Context context, @NonNull List<AnimeStreamingSource> qualityList/*, @NonNull OnQualitySelectedListener listener*/) {
         super(context, 0, qualityList);
         this.qualityList = qualityList;
     }
@@ -44,8 +44,8 @@ public class QualitySpinnerAdapter extends ArrayAdapter<QualityParsedModel> {
             binding = (QualityListItemBinding) convertView.getTag();
         }
 
-        QualityParsedModel model = qualityList.get(position);
-        binding.qualtiyText.setText(model.quality);
+        AnimeStreamingSource model = qualityList.get(position);
+        binding.qualtiyText.setText(model.sourceName);
 
         return convertView;
     }
@@ -61,8 +61,8 @@ public class QualitySpinnerAdapter extends ArrayAdapter<QualityParsedModel> {
             binding = (QualityListItemBinding) convertView.getTag();
         }
 
-        QualityParsedModel model = qualityList.get(position);
-        binding.qualtiyText.setText(model.quality);
+        AnimeStreamingSource model = qualityList.get(position);
+        binding.qualtiyText.setText(model.sourceName);
 
         return convertView;
     }

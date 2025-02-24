@@ -1,4 +1,4 @@
-package local.to.popcornmovies.ui.details;
+package local.to.popcornmovies.ui.anime_details;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -7,19 +7,20 @@ import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+
 import local.to.popcornmovies.R;
 import local.to.popcornmovies.databinding.EpisodeListItemBinding;
-import local.to.popcornmovies.models.Episode;
-import local.to.popcornmovies.models.Season;
+import local.to.popcornmovies.models.AnimeEpisode;
 
-public class EpisodeListAdapter extends RecyclerView.Adapter<EpisodeListAdapter.EpisodeListViewHolder>{
+public class AnimeEpisodeListAdapter extends RecyclerView.Adapter<AnimeEpisodeListAdapter.EpisodeListViewHolder>{
 
-    private final OnEpisodeClickListener _onEpisodeClickListener;
-    private final Season season;
+    private final ArrayList<AnimeEpisode> list;
+    private final OnAnimeEpisodeClick _onAnimeEpisodeClick;
 
-    public EpisodeListAdapter(OnEpisodeClickListener onEpisodeClickListener, Season season) {
-        _onEpisodeClickListener = onEpisodeClickListener;
-        this.season = season;
+    public AnimeEpisodeListAdapter(ArrayList<AnimeEpisode> list, OnAnimeEpisodeClick onAnimeEpisodeClick) {
+        this.list = list;
+        this._onAnimeEpisodeClick = onAnimeEpisodeClick;
     }
 
     @NonNull
@@ -34,12 +35,12 @@ public class EpisodeListAdapter extends RecyclerView.Adapter<EpisodeListAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull EpisodeListViewHolder holder, int position) {
-        holder.bind(this.season.episodes.get(position));
+        holder.bind(this.list.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return this.season == null ? 0 : this.season.episodes.size();
+        return this.list == null ? 0 : this.list.size();
     }
 
     protected class EpisodeListViewHolder extends RecyclerView.ViewHolder {
@@ -51,20 +52,20 @@ public class EpisodeListAdapter extends RecyclerView.Adapter<EpisodeListAdapter.
             this._binding = binding;
         }
 
-        public void bind(Episode episode) {
-            this._binding.episodeTextView.setText(_binding.getRoot().getContext().getResources().getString(R.string.episode,episode.episodeNumber));
+        public void bind(AnimeEpisode animeEpisode) {
+            this._binding.episodeTextView.setText(_binding.getRoot().getContext().getResources().getString(R.string.episode_str, animeEpisode.episode));
             this._binding.getRoot().setOnClickListener(v->{
-                EpisodeListAdapter.this._onEpisodeClickListener.apply(episode);
+                AnimeEpisodeListAdapter.this._onAnimeEpisodeClick.apply(animeEpisode);
             });
             LinearLayout.LayoutParams progressNegativeParams = (LinearLayout.LayoutParams) this._binding.progress.progressNegative.getLayoutParams();
-            progressNegativeParams.weight = 1-episode.watchPercentage;
+            progressNegativeParams.weight = 1- animeEpisode.watchPercentage;
             this._binding.progress.progressNegative.setLayoutParams(progressNegativeParams);
 
             LinearLayout.LayoutParams progressPositiveParams = (LinearLayout.LayoutParams) this._binding.progress.progressPositive.getLayoutParams();
-            progressPositiveParams.weight = episode.watchPercentage;
+            progressPositiveParams.weight = animeEpisode.watchPercentage;
             this._binding.progress.progressPositive.setLayoutParams(progressPositiveParams);
         }
     }
 
-    public interface OnEpisodeClickListener{public void apply(Episode episode);}
+    public interface OnAnimeEpisodeClick{public void apply(AnimeEpisode episode);}
 }

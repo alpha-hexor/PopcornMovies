@@ -1,4 +1,4 @@
-package local.to.popcornmovies.fragments.player;
+package local.to.popcornmovies.fragments.anime_player;
 
 import static androidx.navigation.fragment.FragmentKt.findNavController;
 
@@ -31,28 +31,33 @@ import java.util.Map;
 
 import local.to.popcornmovies.MainViewModel;
 import local.to.popcornmovies.R;
-import local.to.popcornmovies.databinding.FragmentPlayerBinding;
+import local.to.popcornmovies.databinding.FragmentAnimePlayerBinding;
+import local.to.popcornmovies.models.AnimeStreamingSource;
 import local.to.popcornmovies.models.QualityParsedModel;
 import local.to.popcornmovies.ui.player.QualitySpinnerAdapter;
+import local.to.popcornmovies.ui.player.SourceSpinnerAdapter;
 import local.to.popcornmovies.utils.AllAnimeLinkUtils;
+import local.to.popcornmovies.utils.M3U8_QualityParser;
 import local.to.popcornmovies.utils.OkHttpUtil;
 
 @UnstableApi
-public class Player extends Fragment {
-    private static final String TAG = "test->Player";
+public class AnimePlayer extends Fragment {
 
-    private FragmentPlayerBinding binding;
+    private static final String TAG = "test->AnmPlayer";
+
+    private FragmentAnimePlayerBinding binding;
     private MainViewModel _mainViewModel;
     private ExoPlayer _player;
     private NavController _navController;
     private float watchPercentage;
+    private boolean isMp4 = true;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        binding = FragmentPlayerBinding.inflate(inflater, container, false);
+        binding = FragmentAnimePlayerBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -61,11 +66,9 @@ public class Player extends Fragment {
     public void  onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if(getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            getActivity().setRequestedOrientation(
-                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
             return;
         }
-        Log.d(TAG,"Started");
         this.initVariables();
         this.initObservers();
         this.initializations();
@@ -85,30 +88,25 @@ public class Player extends Fragment {
     }
 
     private void initObservers() {
-        this._mainViewModel.qualityParsedModelMutableLiveData.observe(getViewLifecycleOwner(), this::onStreamingData);
+        this._mainViewModel.animeStreamingLinks.observe(getViewLifecycleOwner(), this::onStreamingData);
     }
 
-    private void initializations(){
-        this.binding.exoplayerView.setPlayer(this._player);
+    private void initializations() {
+        this.binding.animeExoplayerView.setPlayer(this._player);
         this._player.setPlayWhenReady(true);
-        this.binding.exoplayerView.setControllerVisibilityListener(new PlayerView.ControllerVisibilityListener() {
+        this.binding.animeExoplayerView.setControllerVisibilityListener(new PlayerView.ControllerVisibilityListener() {
             @Override
             public void onVisibilityChanged(int visibility) {
-                if (visibility == View.VISIBLE) {
-                    binding.qualitySelector.setVisibility(View.VISIBLE); // Show spinner with controls
-                } else {
-                    binding.qualitySelector.setVisibility(View.GONE); // Hide spinner
-                }
+                binding.animeQualitySelector.setVisibility(visibility == View.VISIBLE && !isMp4 ? View.VISIBLE : View.GONE);
+                binding.animeSourceSelector.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
             }
         });
         this._player.addAnalyticsListener(new EventLogger());
-        this.binding.qualitySelector.setVisibility(View.GONE);
-        this._mainViewModel.getQualityParsedModel(
-                getArguments().getBoolean("isSeries"),
-                getArguments().getInt("seasonNumber"),
-                getArguments().getInt("episodeNumber"),
-                getArguments().getString("tmdbId"),
-                getContext());
+        this.binding.animeQualitySelector.setVisibility(View.GONE);
+        this._mainViewModel.getAnimeStreamingLink(
+                getArguments().getString("id"),
+                getArguments().getString("episode"),
+                getArguments().getString("subDub"));
 
         this.watchPercentage = getArguments().getFloat("watchPercentage");
     }
@@ -121,7 +119,7 @@ public class Player extends Fragment {
         }
     }
 
-    private void onStreamingData(ArrayList<QualityParsedModel> qualityParsedModelList) {
+    private void onStreamingData(ArrayList<AnimeStreamingSource> qualityParsedModelList) {
         if(qualityParsedModelList == null) {
             Toast.makeText(getContext(),getString(R.string.link_not_found), Toast.LENGTH_LONG).show();
             this.goBack();
@@ -132,14 +130,16 @@ public class Player extends Fragment {
             this.goBack();
             return;
         }
-        Log.d(TAG,"Streaming details :\n"+qualityParsedModelList.toString());
-        this.binding.qualitySelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+        SourceSpinnerAdapter sourceSelectorAdapter = new SourceSpinnerAdapter(getContext(), qualityParsedModelList);
+        this.binding.animeSourceSelector.setAdapter(sourceSelectorAdapter);
+        this.binding.animeSourceSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                long current = Player.this._player.getCurrentPosition();
+                long current = AnimePlayer.this._player.getCurrentPosition();
                 Log.d(TAG,"Selected : "+i+" :: "+qualityParsedModelList.get(i).toString());
-                setPlayer(qualityParsedModelList.get(i));
-                Player.this._player.seekTo(current);
+                onSourceChange(qualityParsedModelList.get(i));
+                AnimePlayer.this._player.seekTo(current);
             }
 
             @Override
@@ -147,15 +147,12 @@ public class Player extends Fragment {
 
             }
         });
-
-        QualitySpinnerAdapter qualitySelectorAdapter = new QualitySpinnerAdapter(getContext(), qualityParsedModelList);
-        this.binding.qualitySelector.setAdapter(qualitySelectorAdapter);
-        setPlayer(qualityParsedModelList.get(0));
+        this.onSourceChange(qualityParsedModelList.get(0));
     }
 
     public void setPlayer(QualityParsedModel qualityParsedModel) {
         if (qualityParsedModel.videoSource == null) return;
-
+        Log.d(TAG,"playing :: "+qualityParsedModel.videoSource);
         MediaItem mediaItem = new MediaItem.Builder()
                 .setUri(qualityParsedModel.videoSource)
                 .setSubtitleConfigurations(
@@ -168,14 +165,12 @@ public class Player extends Fragment {
             @Override
             public void onEvents(androidx.media3.common.Player player, androidx.media3.common.Player.Events events) {
                 float progress = (float)player.getCurrentPosition()/(float)player.getDuration();
-                if(Player.this.watchPercentage == progress) return;
+                if(AnimePlayer.this.watchPercentage == progress) return;
                 else {
-                    Player.this.watchPercentage = progress;
-                    Player.this._mainViewModel.updateWatchPercentage(
-                            getArguments().getBoolean("isSeries"),
-                            getArguments().getInt("seasonNumber"),
-                            getArguments().getInt("episodeNumber"),
-                            getArguments().getString("tmdbId"),
+                    AnimePlayer.this.watchPercentage = progress;
+                    AnimePlayer.this._mainViewModel.updateAnimeWatchPercentage(
+                            getArguments().getString("id"),
+                            getArguments().getString("episode"),
                             progress
                     );
                 }
@@ -184,6 +179,38 @@ public class Player extends Fragment {
         this._player.setMediaItem(mediaItem);
         this._player.prepare();
         this._player.seekTo((long)(this.watchPercentage*this._player.getDuration()));
+    }
+
+    private void onSourceChange(AnimeStreamingSource animeStreamingSource) {
+        this.isMp4 = animeStreamingSource.isMp4;
+        if(animeStreamingSource.isMp4) {
+            this.setPlayer(new QualityParsedModel("",animeStreamingSource.url));
+            this.binding.animeQualitySelector.setVisibility(View.GONE);
+        } else {
+            this.binding.animeQualitySelector.setVisibility(View.VISIBLE);
+            this._mainViewModel.executor.execute(() -> {
+                ArrayList<QualityParsedModel> qualityParsedModels = M3U8_QualityParser.processMainUrl(animeStreamingSource.url, OkHttpUtil.getInstance(super.getContext()));
+                this.binding.animeQualitySelector.setAdapter(new QualitySpinnerAdapter(getContext(), qualityParsedModels));
+                this.setPlayer(qualityParsedModels.get(0));
+                QualitySpinnerAdapter qualitySelectorAdapter = new QualitySpinnerAdapter(getContext(), qualityParsedModels);
+                this.binding.animeQualitySelector.setAdapter(qualitySelectorAdapter);
+                this.binding.animeQualitySelector.setVisibility(View.VISIBLE);
+                this.binding.animeQualitySelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                        long current = AnimePlayer.this._player.getCurrentPosition();
+                        Log.d(TAG,"Selected : "+i+" :: "+qualityParsedModels.get(i).toString());
+                        setPlayer(qualityParsedModels.get(i));
+                        AnimePlayer.this._player.seekTo(current);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
+
+                    }
+                });
+            });
+        }
     }
 
     @Override

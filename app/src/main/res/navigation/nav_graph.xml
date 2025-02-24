@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_home_to_details"
             app:destination="@id/details" />
+        <action
+            android:id="@+id/action_home_to_animeDetails"
+            app:destination="@id/animeDetails" />
     </fragment>
     <fragment
         android:id="@+id/details"
@@ -42,6 +45,35 @@
             app:argType="integer" />
         <argument
             android:name="tmdbId"
+            app:argType="string" />
+        <argument
+            android:name="watchPercentage"
+            app:argType="float" />
+    </fragment>
+    <fragment
+        android:id="@+id/animeDetails"
+        android:name="local.to.popcornmovies.fragments.anime_details.AnimeDetails"
+        android:label="fragment_anime_details"
+        tools:layout="@layout/fragment_anime_details" >
+        <argument
+            android:name="show"
+            app:argType="local.to.popcornmovies.models.AnimeWishSearchResultModel" />
+        <action
+            android:id="@+id/action_animeDetails_to_animePlayer"
+            app:destination="@id/animePlayer" />
+    </fragment>
+    <fragment
+        android:id="@+id/animePlayer"
+        android:name="local.to.popcornmovies.fragments.anime_player.AnimePlayer"
+        android:label="AnimePlayer" >
+        <argument
+            android:name="id"
+            app:argType="string" />
+        <argument
+            android:name="episode"
+            app:argType="string" />
+        <argument
+            android:name="subDub"
             app:argType="string" />
         <argument
             android:name="watchPercentage"
