@@ -31,6 +31,14 @@ jobs:
           echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
           echo Last build tool version is: $BUILD_TOOL_VERSION
       
+      - name: Get APK version name
+        id: get_version_name
+        run: |
+          VERSION_NAME=$(grep -F 'versionName' app/build.gradle | awk '{print $2}' | tr -d '"')
+          VERSION_NAME="v-$VERSION_NAME"
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo APK version name is: $VERSION_NAME
+
       - name: Signing the app
         uses: r0adkll/sign-android-release@v1
         id: sign_app
@@ -43,9 +51,14 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
       
-      - name: Upload the apk
-        uses: actions/upload-artifact@v4
+      # upload the file to the release section with proper tag and svenstaro/upload-release-action@v2
+      - name: Upload release asset
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: app-release
-          path: ${{steps.sign_app.outputs.signedReleaseFile}}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{steps.sign_app.outputs.signedReleaseFile}}
+          asset_name: app-release.apk
+          tag: ${{ env.VERSION_NAME }}
+          body: ${{ github.event.head_commit.message }}
+          overwrite: true
 
