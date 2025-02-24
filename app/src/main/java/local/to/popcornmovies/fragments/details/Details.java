@@ -75,6 +75,7 @@ public class Details extends Fragment {
 
     private void initVariables() {
         this._binding.setFragmentDetails(this);
+        this._navController = findNavController(this);
         Serializable serializableShow = getArguments().getSerializable("show");
         if(serializableShow instanceof TrendingSearchWishResultModel) this.initShow((TrendingSearchWishResultModel) serializableShow);
         else {
@@ -82,13 +83,12 @@ public class Details extends Fragment {
             return;
         }
         this._mainViewModel = new ViewModelProvider(getActivity()).get(MainViewModel.class);
-        this._navController = findNavController(this);
         this.handler = new Handler(getActivity().getMainLooper());
         this._seasonRecyclerViewState = new RecyclerView.State();
     }
 
     private void initObservers() {
-        if(this._mainViewModel.linkUtils.getValue().isMovie(this._show.mediaLink)) this._mainViewModel.movieData.observe(getViewLifecycleOwner(),this::onMovieData);
+        if(this._mainViewModel.popcornMoviesLinkUtil.getValue().isMovie(this._show.mediaLink)) this._mainViewModel.movieData.observe(getViewLifecycleOwner(),this::onMovieData);
         else this._mainViewModel.seasonData.observe(getViewLifecycleOwner(),this::onSeasonData);
     }
 
@@ -97,8 +97,10 @@ public class Details extends Fragment {
 
     private void initViews() {
         this._mainViewModel.executor.execute(()->{
+            if (this._binding == null) return;
             Bitmap image = OkHttpUtil.getInstance(this._binding.getRoot().getContext()).getBitmap(this._show.poster);
             this.handler.post(()->{
+                if(this._binding == null) return;
                 this._binding.detailsRootLayout.setBackground(new BitmapDrawable(getResources(),image));
             });
         });

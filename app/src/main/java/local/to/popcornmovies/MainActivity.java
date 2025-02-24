@@ -14,7 +14,8 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import local.to.popcornmovies.databinding.ActivityMainBinding;
 import local.to.popcornmovies.rooom_database.MainDatabase;
-import local.to.popcornmovies.utils.LinkUtils;
+import local.to.popcornmovies.utils.AllAnimeLinkUtils;
+import local.to.popcornmovies.utils.PopcornMoviesLinkUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,7 +40,11 @@ public class MainActivity extends AppCompatActivity {
 
         this._viewModel = new ViewModelProvider(this).get(MainViewModel.class);
         this._viewModel.executor.execute(()-> {
-            this._viewModel.linkUtils.postValue(new LinkUtils(this));
+            this._viewModel.popcornMoviesLinkUtil.postValue(new PopcornMoviesLinkUtils(this));
+            this._viewModel.mainDatabase.postValue(MainDatabase.getDataBase(this));
+        });
+        this._viewModel.executor.execute(()-> {
+            this._viewModel.allAnimeLinkUtil.postValue(new AllAnimeLinkUtils(this));
             this._viewModel.mainDatabase.postValue(MainDatabase.getDataBase(this));
         });
 

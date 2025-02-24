@@ -7,11 +7,11 @@
     android:keepScreenOn="true"
     android:background="@color/black"
     android:orientation="horizontal"
-    tools:context=".fragments.player.Player">
+    tools:context=".fragments.anime_player.AnimePlayer">
 
 
     <androidx.media3.ui.PlayerView
-        android:id="@+id/exoplayer_view"
+        android:id="@+id/anime_exoplayer_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/black"
@@ -19,16 +19,26 @@
         app:auto_show="true"
         app:hide_on_touch="true"
         app:show_buffering="always"
-        app:show_subtitle_button="true"
+        app:show_subtitle_button="false"
         app:use_controller="true">
     </androidx.media3.ui.PlayerView>
 
     <Spinner
-        android:id="@+id/quality_selector"
+        android:id="@+id/anime_quality_selector"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:padding="4dp"
+        android:background="@color/colorPrimary"
+        tools:listitem="@layout/quality_list_item"/>
+
+    <Spinner
+        android:id="@+id/anime_source_selector"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:padding="4dp"
+        android:layout_gravity="top|right"
         android:background="@color/colorPrimary"
         tools:listitem="@layout/quality_list_item"/>
 

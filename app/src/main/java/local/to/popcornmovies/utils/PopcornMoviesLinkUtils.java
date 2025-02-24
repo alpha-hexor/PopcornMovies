@@ -18,10 +18,10 @@ import local.to.popcornmovies.models.TrendingSearchWishResultModel;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class LinkUtils {
+public class PopcornMoviesLinkUtils {
     
     private static final String
-            TAG = "test->LinkUtils",WORKER_URL,HOME_URL,CDN_GETTER_URL,SEARCH_REGEX,SEARCH_URL,
+            TAG = "test->PopcornMoviesLinkUtils",WORKER_URL,HOME_URL,CDN_GETTER_URL,SEARCH_REGEX,SEARCH_URL,
             TMDB_SERIES_REFERER,TMDB_MOVIES_REFERER,TMDB_URL,TMDB_REGEX,TRENDING_REGEX,
             AUTHORIZATION_BEARER,AUTHORIZATION;
 
@@ -56,7 +56,7 @@ public class LinkUtils {
     private final Pattern SEARCH_REGEX_pattern, TMDB_REGEX_pattern, TRENDING_REGEX_pattern;
     private final Gson gson;
 
-    public LinkUtils(Context context){
+    public PopcornMoviesLinkUtils(Context context){
         this.okHttpUtil = OkHttpUtil.getInstance(context);
         this.TMDB_REGEX_pattern = Pattern.compile(TMDB_REGEX);
         this.SEARCH_REGEX_pattern =  Pattern.compile(SEARCH_REGEX);
