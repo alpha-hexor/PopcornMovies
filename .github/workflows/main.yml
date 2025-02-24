@@ -25,4 +25,4 @@ jobs:
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Get the apk file path with the help of find
-        run: echo "::set-output name=apk_path::$(find . -name '*.apk')"
+        run: echo "::set-output name=apk_path::$(find app/ -name '*.apk')"
