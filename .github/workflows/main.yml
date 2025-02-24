@@ -24,6 +24,13 @@ jobs:
       - name: Build the apk
         run: ./gradlew assembleRelease --stacktrace
       
+      - name: Get build tool version
+        shell: bash
+        run: |
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+          echo Last build tool version is: $BUILD_TOOL_VERSION
+      
       - name: Signing the app
         uses: r0adkll/sign-android-release@v1
         id: sign_app
@@ -33,6 +40,8 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEY_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
       
       - name: Upload the apk
         uses: actions/upload-artifact@v4
